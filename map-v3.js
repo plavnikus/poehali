@@ -6,66 +6,16 @@ const COORDS={
  'tazh-5':[52.719069,106.533435]
 };
 const style=document.createElement('style');
-style.textContent='.mapwrap{margin-top:14px}.mapbox{height:58vh;min-height:420px;border-radius:20px;overflow:hidden;border:1px solid #e6e0d6;background:#e9ece7;position:relative}.mapnote{margin:10px 0 0;font-size:12px;color:var(--m);line-height:1.45}.maploading,.maperror{position:absolute;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--m);font-size:14px;line-height:1.45}.maperror{color:#7c443d}.leaflet-popup-content-wrapper{border-radius:14px}.mpop b{display:block;font-size:14px;margin-bottom:5px}.mpop button{border:0;background:var(--a);color:white;border-radius:10px;padding:7px 10px;font-size:12px;font-weight:700;margin-top:7px}';
+style.textContent='.mapwrap{margin-top:14px}.mapframe{width:100%;height:52vh;min-height:390px;border:1px solid #e6e0d6;border-radius:20px;background:#e9ece7;display:block}.mapnote{margin:10px 0 0;font-size:12px;color:var(--m);line-height:1.45}.mapplaces{display:grid;gap:8px;margin-top:14px}.mapplace{width:100%;border:1px solid #e6e0d6;background:var(--s);border-radius:15px;padding:12px 13px;text-align:left}.mapplace.on{border-color:var(--a);box-shadow:0 0 0 1px var(--a) inset}.mapplace b{display:block;font-size:14px}.mapplace span{font-size:12px;color:var(--m)}.mapactions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}';
 document.head.appendChild(style);
-
 const navEl=document.querySelector('.nav');
-if(navEl&&!document.getElementById('nm')){
-  const b=document.createElement('button');
-  b.id='nm';b.innerHTML='📍<br>Карта';b.onclick=()=>mapPage();
-  const best=document.getElementById('nb');
-  navEl.insertBefore(b,best||document.getElementById('nf')||null);
-  navEl.style.gridTemplateColumns='repeat(5,1fr)';
-}
-
+if(navEl&&!document.getElementById('nm')){const b=document.createElement('button');b.id='nm';b.innerHTML='📍<br>Карта';b.onclick=()=>mapPage();const best=document.getElementById('nb');navEl.insertBefore(b,best||document.getElementById('nf')||null);navEl.style.gridTemplateColumns='repeat(5,1fr)';}
 nav=function(k){['h','a','m','b','f'].forEach(x=>{const el=document.getElementById('n'+x);if(el)el.classList.toggle('on',x===k)});};
 window.mapPage=function(){f='all';q='';location.hash='#/map'};
-
-function ensureCss(){
- if(document.getElementById('leaflet-css'))return;
- const l=document.createElement('link');
- l.id='leaflet-css';l.rel='stylesheet';
- l.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css';
- l.onerror=()=>{l.href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'};
- document.head.appendChild(l);
-}
-function loadScript(src){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.async=true;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
-async function loadLeaflet(){
- if(window.L)return true;
- ensureCss();
- try{await loadScript('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js');if(window.L)return true}catch(e){}
- try{await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');if(window.L)return true}catch(e){}
- return false;
-}
-async function renderMap(){
- nav('m');
- const pts=P.filter(p=>COORDS[p.i]);
- v.innerHTML=`<h1>📍 Карта мест</h1><p class="muted">На карте сейчас ${pts.length} мест с подтверждёнными координатами из ${P.length}. Остальные добавляем только после геопроверки.</p><div class="mapwrap"><div id="map" class="mapbox"><div class="maploading">Загружаю карту…</div></div><p class="mapnote">Нажми на маркер → откроется название и кнопка карточки. Координаты не подставляем приблизительно.</p></div>`;
- const ok=await loadLeaflet();
- const box=document.getElementById('map');
- if(!box)return;
- if(!ok){box.innerHTML='<div class="maperror">Не удалось загрузить картографический модуль. Я попробовал два независимых источника Leaflet.</div>';return;}
- box.innerHTML='';
- try{
-   const map=L.map('map',{zoomControl:true});
-   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
-   const bounds=[];
-   pts.forEach(p=>{
-     const [lat,lng]=COORDS[p.i];bounds.push([lat,lng]);
-     const m=L.marker([lat,lng]).addTo(map);
-     m.bindPopup(`<div class="mpop"><b>${E(p.n)}</b><span>${E((D[p.d]||[''])[0]||'')}</span><br><button onclick="place('${p.i}')">Открыть карточку</button></div>`);
-   });
-   if(bounds.length>1)map.fitBounds(bounds,{padding:[24,24]});
-   else if(bounds.length===1)map.setView(bounds[0],11);
-   else map.setView([52.3,104.3],7);
-   setTimeout(()=>map.invalidateSize(),180);
- }catch(e){box.innerHTML='<div class="maperror">Карта загрузилась некорректно. Если это сообщение повторится, переключу карту на другой способ отображения.</div>';}
-}
-const baseRoute=route;
-route=function(scroll=true){
- const h=location.hash||'#/';
- if(h==='#/map'){renderMap();if(scroll)scrollTo(0,0);}
- else baseRoute(scroll);
-};
-route(false);
+let activeId=Object.keys(COORDS)[0];
+function embedUrl(lat,lon){const dx=.07,dy=.035;const bbox=[lon-dx,lat-dy,lon+dx,lat+dy].join('%2C');return 'https://www.openstreetmap.org/export/embed.html?bbox='+bbox+'&layer=mapnik&marker='+lat+'%2C'+lon;}
+function externalUrl(lat,lon){return 'https://www.openstreetmap.org/?mlat='+lat+'&mlon='+lon+'#map=13/'+lat+'/'+lon;}
+window.selectMapPoint=function(id){activeId=id;const p=P.find(x=>x.i===id);if(!p)return;const c=COORDS[id];const fr=document.getElementById('osmframe');if(fr)fr.src=embedUrl(c[0],c[1]);const title=document.getElementById('mapactive');if(title)title.textContent=p.n;const card=document.getElementById('mapcard');if(card)card.onclick=()=>place(id);const ext=document.getElementById('mapexternal');if(ext)ext.href=externalUrl(c[0],c[1]);document.querySelectorAll('.mapplace').forEach(x=>x.classList.toggle('on',x.dataset.id===id));};
+function renderMap(){nav('m');const pts=P.filter(p=>COORDS[p.i]);if(!pts.find(p=>p.i===activeId))activeId=pts[0]&&pts[0].i;const p=P.find(x=>x.i===activeId)||pts[0];if(!p){v.innerHTML='<h1>📍 Карта мест</h1><p class="muted">Пока нет точек с подтверждёнными координатами.</p>';return;}const c=COORDS[p.i];v.innerHTML='<h1>📍 Карта мест</h1><p class="muted">Сейчас нанесено '+pts.length+' места из '+P.length+'. Показываем только точки с подтверждёнными координатами.</p><div class="mapwrap"><iframe id="osmframe" class="mapframe" loading="lazy" src="'+embedUrl(c[0],c[1])+'"></iframe><p class="mapnote">Сейчас: <b id="mapactive">'+E(p.n)+'</b>. Выбери другую точку ниже — карта переключится на неё.</p><div class="mapactions"><button id="mapcard" class="btn primary" onclick="place(\''+p.i+'\')">Открыть карточку</button><a id="mapexternal" class="btn" href="'+externalUrl(c[0],c[1])+'" target="_blank" rel="noopener">Открыть в OSM ↗</a></div><div class="mapplaces">'+pts.map(x=>'<button class="mapplace '+(x.i===p.i?'on':'')+'" data-id="'+x.i+'" onclick="selectMapPoint(\''+x.i+'\')"><b>📍 '+E(x.n)+'</b><span>'+E((D[x.d]||[''])[0]||'')+'</span></button>').join('')+'</div><p class="mapnote">Одна точка на карте за раз — зато без внешней JS-библиотеки и устойчиво на iPhone. Приблизительные координаты не используем.</p></div>';}
+const baseRoute=route;route=function(scroll=true){const h=location.hash||'#/';if(h==='#/map'){renderMap();if(scroll)scrollTo(0,0);}else baseRoute(scroll);};route(false);
 })();
