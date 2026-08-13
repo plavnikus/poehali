@@ -37,3 +37,4 @@ Object.assign(window.GALLERIES,{
   "slud-13":[{"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Байкальск%2C%20берег%20Байкала.jpg?width=1400","caption":"Берег Байкала в Байкальске · SAKRI · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Байкальск,_берег_Байкала.jpg"}],
   "slud-15":[{"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Клубника%20-%20один%20из%20символов%20Байкальска.jpg?width=1400","caption":"Клубника — один из символов Байкальска · Миллер Наталья · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Клубника_-_один_из_символов_Байкальска.jpg"}]
 });
+window.addEventListener('load',()=>{if(document.querySelector('script[src="quality.js"]'))return;const s=document.createElement('script');s.src='quality.js?v=2';s.async=false;document.body.appendChild(s);});
