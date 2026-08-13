@@ -1,1 +1,5 @@
-(function(){const old=window.RP;})();
+(function(){
+function sec(title,text,cls){const s=document.createElement('section');s.className='deepsec'+(cls?' '+cls:'');const h=document.createElement('h3');h.textContent=title;s.appendChild(h);const p=document.createElement('p');p.textContent=text;s.appendChild(p);return s;}
+function render(d){const w=document.createElement('div');w.className='deep';w.appendChild(sec('Почему сюда стоит ехать',d.why));const p=document.createElement('section');p.className='deepsec';const h=document.createElement('h3');h.textContent='Практически';p.appendChild(h);d.facts.forEach(t=>{const x=document.createElement('div');x.className='deepfact';x.textContent=t;p.appendChild(x)});p.appendChild(sec('Время',d.time));p.appendChild(sec('Доступ',d.access));w.appendChild(p);w.appendChild(sec('Что важно знать',d.important,'deepwarn'));w.appendChild(sec('Проверка информации',d.check,'deepcheck'));return w;}
+const old=window.RP;window.RP=function(i){old(i);const d=window.PLACE_DETAILS&&window.PLACE_DETAILS[i];if(!d)return;const el=document.querySelector('.detail');if(!el)return;el.querySelectorAll('.deep').forEach(x=>x.remove());const block=render(d);const links=el.querySelector('.links');if(links)el.insertBefore(block,links);else el.appendChild(block);};
+})();
