@@ -53,4 +53,4 @@ route=function(scroll=true){
 };
 route(false);
 })();
-if(!document.querySelector('script[src^="map.js"]')){const s=document.createElement('script');s.src='map.js?v=1';document.body.appendChild(s);}
+if(!document.querySelector('script[src^="map.js"]')){const s=document.createElement('script');s.src='map.js?v=2';document.body.appendChild(s);}
