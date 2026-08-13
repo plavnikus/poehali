@@ -14,6 +14,7 @@ function qm(p){
  if(BAD.has(p.i))fit='bad'; else if(p.v!=='verified'||p.s||CAUTION.has(p.i)||/разреш|провер|уточн|грунт|дожд|доступ/i.test(p.o||''))fit='caution';
  return {insta,strong,fit,access:ACCESS[p.i]||'🚗 доступ уточнить'};
 }
+window.qm=qm;
 function baseTags(p){
  let t=(p.c||[]).map(k=>`<span class="tag">${C[k]?.[0]||'📍'} ${C[k]?.[1]||k}</span>`).join('');
  if(p.s)t+='<span class="tag sac">🟣 Сакральное</span>';
@@ -30,19 +31,14 @@ function qbadges(p){
 const style=document.createElement('style');
 style.textContent='.qtags{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 2px}.qtag{font-size:11px;padding:5px 7px;border-radius:999px;background:#f0eee8}.qstrong{background:#fff0d1;color:#7d5100}.qinsta{background:#f5e9f4;color:#70466d}.qok{background:#e5f1e8;color:#27633d}.qcaution{background:#fff0d5;color:#8a5b13}.qbad{background:#f8e2df;color:#8a352c}.qaccess{background:#edf0f2;color:#4d5962}.firemark{font-size:.88em;margin-right:3px}';
 document.head.appendChild(style);
-
-// Всегда возвращаем чистые базовые категории в списке, даже если старый скрипт успел переопределить tag().
 tag=baseTags;
-
 const rawCard=card;
 card=function(p){
  let html=rawCard(p);
- // Удаляем служебные плашки, если их успел добавить старый скрипт из кэша.
  html=html.replace(/<div class="qtags">[\s\S]*?<\/div>/g,'');
  if(qm(p).strong) html=html.replace('<h3>','<h3><span class="firemark">🔥</span>');
  return html;
 };
-
 const rawRP=RP;
 RP=function(i){
  rawRP(i);
@@ -54,7 +50,6 @@ RP=function(i){
  const status=detail.querySelector('.status');
  if(status)status.insertAdjacentHTML('afterend',qbadges(p));
 };
-
 chips=function(){
  const list=[['all','Все'],['strong','🔥 Сильные'],['insta','📸 Instagram'],['fit','✅ Подходит нам'],['photo','📸 Красиво'],['rest','🌿 Отдых'],['culture','🛕 Культура'],['history','🗿 История'],['food','🍲 Еда'],['unusual','🏚 Необычное'],['sacred','🟣 Сакральное']];
  return `<div class="chips">${list.map(x=>`<button class="chip ${f===x[0]?'on':''}" onclick="setf('${x[0]}')">${x[1]}</button>`).join('')}</div>`;
@@ -66,4 +61,5 @@ match=function(p){
 };
 setf=function(x){f=x;route(false)};
 route(false);
+if(!document.querySelector('script[data-best]')){const s=document.createElement('script');s.src='best.js?v=1';s.dataset.best='1';document.body.appendChild(s)}
 })();
