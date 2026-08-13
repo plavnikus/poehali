@@ -21,7 +21,12 @@ window.GALLERIES={
   ]
 };
 Object.assign(window.GALLERIES,{
-  "arshan-1":[{"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Аршанский%20водопад.jpg?width=1400","caption":"Водопад на Кынгарге · CC BY-SA 4.0 · Wikimedia Commons","sourceUrl":"https://commons.wikimedia.org/wiki/File:Аршанский_водопад.jpg"}],
+  "arshan-1":[
+    {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Аршанский%20водопад.jpg?width=1400","caption":"Первый водопад на Кынгарге · IrinaChernoyarova · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Аршанский_водопад.jpg"},
+    {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Первый%20водопад%20%2C%20р.%20Кынгырга.jpg?width=1400","caption":"Первый водопад на Кынгарге · Zhmurova91 · Wikimedia Commons","sourceUrl":"https://commons.wikimedia.org/wiki/File:Первый_водопад_,_р._Кынгырга.jpg"},
+    {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Первый%20водопад.jpg?width=1400","caption":"Первый водопад · Zhmurova91 · Wikimedia Commons","sourceUrl":"https://commons.wikimedia.org/wiki/File:Первый_водопад.jpg"},
+    {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Первый%20водопад%2C%20р.%20Кынгырга.jpg?width=1400","caption":"Первый водопад на Кынгарге · Zhmurova91 · Wikimedia Commons","sourceUrl":"https://commons.wikimedia.org/wiki/File:Первый_водопад,_р._Кынгырга.jpg"}
+  ],
   "arshan-2":[{"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Buddha%20of%20Medicine%20in%20Arshan.jpg?width=1400","caption":"Будда Медицины · Andrijko Z. · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Buddha_of_Medicine_in_Arshan.jpg"}],
   "arshan-5":[
     {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Нилова%20Пустынь.jpg?width=1400","caption":"Источник Нилова Пустынь · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Нилова_Пустынь.jpg"},
@@ -53,7 +58,7 @@ window.addEventListener('load',()=>{
   }
   const s=document.createElement('script');
   s.id='quality-module';
-  s.src='quality.js?v=5';
+  s.src='quality.js?v=6';
   s.onload=loadBest;
   document.body.appendChild(s);
   setTimeout(loadBest,700);
