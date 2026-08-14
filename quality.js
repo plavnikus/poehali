@@ -23,7 +23,7 @@ function baseTags(p){
 function cautionBadge(p){
  const o=(p.o||'').toLowerCase();
  if(/разреш|допуск/.test(o))return '<span class="qtag qcaution">🎫 Нужен допуск / проверка разрешения</span>';
- if(/дожд/.test(o))return '<span class="qtag qcaution">🌧 После дождя — проверить</span>';
+ if(/дожд/.test(o))return '';
  if(/грунт/.test(o))return '<span class="qtag qcaution">🚗 Грунтовка — проверить состояние</span>';
  if(/доступ|подъезд|уточн|провер/.test(o)||CAUTION.has(p.i))return '<span class="qtag qcaution">🔎 Доступ требует проверки</span>';
  if(p.s)return '<span class="qtag qcaution">🟣 Сакральное место</span>';
@@ -33,7 +33,9 @@ function qbadges(p){
  const m=qm(p),a=[];
  if(m.strong)a.push('<span class="qtag qstrong">🔥 Сильное место</span>');
  if(m.insta)a.push('<span class="qtag qinsta">📸 Instagram</span>');
- a.push(m.fit==='ok'?'<span class="qtag qok">✅ Подходит нам</span>':m.fit==='bad'?'<span class="qtag qbad">❌ Не наш формат</span>':cautionBadge(p));
+ if(m.fit==='ok')a.push('<span class="qtag qok">✅ Подходит нам</span>');
+ else if(m.fit==='bad')a.push('<span class="qtag qbad">❌ Не наш формат</span>');
+ else {const caution=cautionBadge(p);if(caution)a.push(caution)}
  a.push(`<span class="qtag qaccess">${m.access}</span>`);
  return `<div class="qtags">${a.join('')}</div>`;
 }
@@ -71,5 +73,5 @@ match=function(p){
 setf=function(x){f=x;route(false)};
 route(false);
 if(!document.querySelector('script[data-best]')){const s=document.createElement('script');s.src='best.js?v=1';s.dataset.best='1';document.body.appendChild(s)}
-if(!document.getElementById('details-data')){const d=document.createElement('script');d.id='details-data';d.src='details.js?v=3';d.onload=()=>{const c=document.createElement('link');c.rel='stylesheet';c.href='details-style.css?v=1';document.head.appendChild(c);const r=document.createElement('script');r.src='details-render.js?v=3';document.body.appendChild(r)};document.body.appendChild(d)}
+if(!document.getElementById('details-data')){const d=document.createElement('script');d.id='details-data';d.src='details.js?v=4';d.onload=()=>{const c=document.createElement('link');c.rel='stylesheet';c.href='details-style.css?v=1';document.head.appendChild(c);const r=document.createElement('script');r.src='details-render.js?v=4';document.body.appendChild(r)};document.body.appendChild(d)}
 })();
