@@ -73,5 +73,5 @@ match=function(p){
 setf=function(x){f=x;route(false)};
 route(false);
 if(!document.querySelector('script[data-best]')){const s=document.createElement('script');s.src='best.js?v=1';s.dataset.best='1';document.body.appendChild(s)}
-if(!document.getElementById('details-data')){const d=document.createElement('script');d.id='details-data';d.src='details.js?v=4';d.onload=()=>{const c=document.createElement('link');c.rel='stylesheet';c.href='details-style.css?v=1';document.head.appendChild(c);const r=document.createElement('script');r.src='details-render.js?v=4';document.body.appendChild(r)};document.body.appendChild(d)}
+if(!document.getElementById('details-data')){const d=document.createElement('script');d.id='details-data';d.src='details.js?v=5';d.onload=()=>{const c=document.createElement('link');c.rel='stylesheet';c.href='details-style.css?v=1';document.head.appendChild(c);const r=document.createElement('script');r.src='details-render.js?v=4';document.body.appendChild(r)};document.body.appendChild(d)}
 })();
