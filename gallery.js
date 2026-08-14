@@ -58,7 +58,7 @@ window.addEventListener('load',()=>{
   }
   const s=document.createElement('script');
   s.id='quality-module';
-  s.src='quality.js?v=6';
+  s.src='quality.js?v=7';
   s.onload=loadBest;
   document.body.appendChild(s);
   setTimeout(loadBest,700);
