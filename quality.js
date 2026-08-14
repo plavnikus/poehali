@@ -39,6 +39,7 @@ function qbadges(p){
  a.push(`<span class="qtag qaccess">${m.access}</span>`);
  return `<div class="qtags">${a.join('')}</div>`;
 }
+window.qbadges=qbadges;
 const style=document.createElement('style');
 style.textContent='.qtags{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 2px}.qtag{font-size:11px;padding:5px 7px;border-radius:999px;background:#f0eee8}.qstrong{background:#fff0d1;color:#7d5100}.qinsta{background:#f5e9f4;color:#70466d}.qok{background:#e5f1e8;color:#27633d}.qcaution{background:#fff0d5;color:#8a5b13}.qbad{background:#f8e2df;color:#8a352c}.qaccess{background:#edf0f2;color:#4d5962}.firemark{font-size:.88em;margin-right:3px}';
 document.head.appendChild(style);
@@ -46,20 +47,8 @@ tag=baseTags;
 const rawCard=card;
 card=function(p){
  let html=rawCard(p);
- html=html.replace(/<div class="qtags">[\s\S]*?<\/div>/g,'');
  if(qm(p).strong) html=html.replace('<h3>','<h3><span class="firemark">🔥</span>');
  return html;
-};
-const rawRP=RP;
-RP=function(i){
- rawRP(i);
- const p=P.find(x=>x.i===i);
- if(!p)return;
- const detail=document.querySelector('.detail');
- if(!detail)return;
- detail.querySelectorAll('.qtags').forEach(x=>x.remove());
- const status=detail.querySelector('.status');
- if(status)status.insertAdjacentHTML('afterend',qbadges(p));
 };
 chips=function(){
  const list=[['all','Все'],['strong','🔥 Сильные'],['insta','📸 Instagram'],['fit','✅ Подходит нам'],['photo','📸 Красиво'],['rest','🌿 Отдых'],['culture','🛕 Культура'],['history','🗿 История'],['food','🍲 Еда'],['unusual','🏚 Необычное'],['sacred','🟣 Сакральное']];
