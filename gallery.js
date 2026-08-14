@@ -28,6 +28,7 @@ Object.assign(window.GALLERIES,{
     {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Первый%20водопад%2C%20р.%20Кынгырга.jpg?width=1400","caption":"Первый водопад на Кынгарге · Zhmurova91 · Wikimedia Commons","sourceUrl":"https://commons.wikimedia.org/wiki/File:Первый_водопад,_р._Кынгырга.jpg"}
   ],
   "arshan-2":[{"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Buddha%20of%20Medicine%20in%20Arshan.jpg?width=1400","caption":"Будда Медицины · Andrijko Z. · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Buddha_of_Medicine_in_Arshan.jpg"}],
+  "arshan-3":[{"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Khoymorsky%20datsan%20near%20Arshan%20%28Buryatia%29.jpg?width=1400","caption":"Хойморский дацан «Бодхидхарма» · Tohuchar · Wikimedia Commons","sourceUrl":"https://commons.wikimedia.org/wiki/File:Khoymorsky_datsan_near_Arshan_(Buryatia).jpg"}],
   "arshan-5":[
     {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Нилова%20Пустынь.jpg?width=1400","caption":"Источник Нилова Пустынь · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Нилова_Пустынь.jpg"},
     {"src":"https://commons.wikimedia.org/wiki/Special:FilePath/Нилова%20пустынь.%20Вид%20с%20лугов%20на%20церковь%20и%20дом%2C%20выстроенные%20архиереем%20Нилом.jpg?width=1400","caption":"Исторический вид Ниловой Пустыни · CC0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Нилова_пустынь._Вид_с_лугов_на_церковь_и_дом,_выстроенные_архиереем_Нилом.jpg"},
@@ -58,7 +59,7 @@ window.addEventListener('load',()=>{
   }
   const s=document.createElement('script');
   s.id='quality-module';
-  s.src='quality.js?v=8';
+  s.src='quality.js?v=9';
   s.onload=loadBest;
   document.body.appendChild(s);
   setTimeout(loadBest,700);
