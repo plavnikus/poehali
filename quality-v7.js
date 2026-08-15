@@ -1,1 +1,0 @@
-(()=>{const s=document.createElement('script');s.src='details-render.js?v=4';document.body.appendChild(s)})();
