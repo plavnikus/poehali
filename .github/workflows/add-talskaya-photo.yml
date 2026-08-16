@@ -1,0 +1,53 @@
+name: Add Talskaya card photo
+on:
+  push:
+    paths:
+      - '.github/workflows/add-talskaya-photo.yml'
+permissions:
+  contents: write
+jobs:
+  photo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet pillow
+      - name: Download and verify photo
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from urllib.parse import urlencode
+          from io import BytesIO
+          from PIL import Image, ImageOps
+          import json, re, html
+          filename='Потухший вулкан Тальская вершина.jpg'
+          params=urlencode({'action':'query','format':'json','prop':'imageinfo','iiprop':'url|extmetadata','iiurlwidth':'900','titles':'File:'+filename,'formatversion':'2'})
+          req=Request('https://commons.wikimedia.org/w/api.php?'+params,headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+          with urlopen(req,timeout=60) as r: payload=json.load(r)
+          info=payload['query']['pages'][0]['imageinfo'][0]
+          meta=info.get('extmetadata',{})
+          lic=html.unescape(re.sub('<[^>]+>','',meta.get('LicenseShortName',{}).get('value',''))).strip()
+          artist=html.unescape(re.sub('<[^>]+>','',meta.get('Artist',{}).get('value',''))).strip()
+          if not lic.startswith('CC BY-SA'): raise RuntimeError('Unexpected license '+lic)
+          preq=Request(info.get('thumburl') or info['url'],headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+          with urlopen(preq,timeout=90) as r: raw=r.read()
+          im=Image.open(BytesIO(raw)); im=ImageOps.exif_transpose(im).convert('RGB'); im.thumbnail((900,900),Image.Resampling.LANCZOS)
+          out=Path('assets/place-photos/arshan-18-1.jpg'); out.parent.mkdir(parents=True,exist_ok=True)
+          im.save(out,'JPEG',quality=82,optimize=True,progressive=True)
+          if out.stat().st_size==0 or out.stat().st_size>400*1024: raise RuntimeError('Bad output size')
+          print('ORIGINAL_URL='+info['url'])
+          print('ARTIST='+artist)
+          print('LICENSE='+lic)
+          print('LOCAL_SIZE='+str(out.stat().st_size))
+          print('DIMENSIONS='+str(im.size))
+          PY
+      - name: Commit photo
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/place-photos/arshan-18-1.jpg
+          git commit -m 'Add optimized Talskaya Vershina photo'
+          git push
