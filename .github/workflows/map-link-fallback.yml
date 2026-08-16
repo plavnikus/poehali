@@ -1,0 +1,45 @@
+name: Map entity first with coordinate fallback
+on:
+  push:
+    paths:
+      - '.github/workflows/map-link-fallback.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply map-link priority
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('place-app.js')
+          s=p.read_text()
+          old="function mapLinksHTML(p){const n=window.PLACE_NAV&&window.PLACE_NAV[p.i];if(!n)return'';const a=[];if(n.googleUrl)a.push(`<a class=\"btn\" href=\"${n.googleUrl}\" target=\"_blank\" rel=\"noopener\">📍 Google Maps</a>`);if(n.yandexUrl)a.push(`<a class=\"btn\" href=\"${n.yandexUrl}\" target=\"_blank\" rel=\"noopener\">📍 Яндекс Карты</a>`);return a.length?`<div class=\"maplinks\">${a.join('')}</div>`:''}"
+          new="function mapLinksHTML(p){const n=window.PLACE_NAV&&window.PLACE_NAV[p.i];if(!n)return'';const hasCoords=Number.isFinite(n.lat)&&Number.isFinite(n.lon),coord=hasCoords?encodeURIComponent(n.lat+','+n.lon):'';const google=n.googleUrl||(hasCoords?'https://www.google.com/maps/search/?api=1&query='+coord:'');const yandex=n.yandexUrl||(hasCoords?'https://yandex.ru/maps/?text='+coord:'');const a=[];if(google)a.push(`<a class=\"btn\" href=\"${google}\" target=\"_blank\" rel=\"noopener\">📍 Google Maps</a>`);if(yandex)a.push(`<a class=\"btn\" href=\"${yandex}\" target=\"_blank\" rel=\"noopener\">📍 Яндекс Карты</a>`);return a.length?`<div class=\"maplinks\">${a.join('')}</div>`:''}"
+          if old not in s: raise SystemExit('mapLinksHTML anchor not found')
+          p.write_text(s.replace(old,new,1))
+
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('place-nav.js?build=2','place-nav.js?build=3',1)
+          s=s.replace('place-app.js?build=6','place-app.js?build=7',1)
+          p.write_text(s)
+
+          app=Path('place-app.js').read_text()
+          nav=Path('place-nav.js').read_text()
+          idx=Path('index.html').read_text()
+          assert 'n.googleUrl||' in app and 'n.yandexUrl||' in app
+          assert 'maps.app.goo.gl/EFbSrY9WXRYZiWza6' in nav
+          assert 'place-nav.js?build=3' in idx and 'place-app.js?build=7' in idx
+          print('Map link priority QA OK')
+          PY
+      - name: Commit and remove workflow
+        run: |
+          rm .github/workflows/map-link-fallback.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add place-app.js place-nav.js index.html .github/workflows/map-link-fallback.yml
+          git commit -m 'Prefer map place cards with coordinate fallback'
+          git push
