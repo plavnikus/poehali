@@ -1,0 +1,69 @@
+name: Add map links
+on:
+  push:
+    paths:
+      - '.github/workflows/add-map-links.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply navigation UI
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('place-app.js')
+          s=p.read_text()
+          anchor="function qualityBadges(p){return window.qbadges?window.qbadges(p):''}"
+          helper="function mapLinksHTML(p){const n=window.PLACE_NAV&&window.PLACE_NAV[p.i];if(!n||!n.verified||!Number.isFinite(n.lat)||!Number.isFinite(n.lon))return'';const g=encodeURIComponent(n.lat+','+n.lon),y=encodeURIComponent(n.lat+','+n.lon);return`<div class=\"maplinks\"><a class=\"btn\" href=\"https://www.google.com/maps/search/?api=1&query=${g}\" target=\"_blank\" rel=\"noopener\">📍 Google Maps</a><a class=\"btn\" href=\"https://yandex.ru/maps/?text=${y}\" target=\"_blank\" rel=\"noopener\">📍 Яндекс Карты</a></div>`}"
+          if helper not in s:
+              if anchor not in s: raise SystemExit('qualityBadges anchor not found')
+              s=s.replace(anchor,helper+anchor,1)
+          old="${p.u?`<a class=\"btn\" href=\"${p.u}\" target=\"_blank\" rel=\"noopener\">Источник / описание ↗</a>`:''}</div>${detailHTML(p)}"
+          new="${p.u?`<a class=\"btn\" href=\"${p.u}\" target=\"_blank\" rel=\"noopener\">Источник / описание ↗</a>`:''}${mapLinksHTML(p)}</div>${detailHTML(p)}"
+          if new not in s:
+              if old not in s: raise SystemExit('RP links anchor not found')
+              s=s.replace(old,new,1)
+          p.write_text(s)
+
+          p=Path('app-style.css')
+          s=p.read_text()
+          css='.maplinks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.maplinks .btn{min-height:44px;display:flex;align-items:center;justify-content:center}'
+          if css not in s: s+=css
+          p.write_text(s)
+
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('app-style.css?build=2232','app-style.css?build=2233')
+          s=s.replace('place-app.js?build=4','place-app.js?build=5')
+          old='<script src="details.js?build=18"></script><script src="place-app.js?build=5"></script>'
+          new='<script src="details.js?build=18"></script><script src="place-nav.js?build=1"></script><script src="place-app.js?build=5"></script>'
+          if new not in s:
+              if old not in s: raise SystemExit('index script anchor not found')
+              s=s.replace(old,new,1)
+          p.write_text(s)
+
+          # QA
+          nav=Path('place-nav.js').read_text()
+          app=Path('place-app.js').read_text()
+          csss=Path('app-style.css').read_text()
+          idx=Path('index.html').read_text()
+          assert nav.count('verified:true')==10
+          assert 'Google Maps' in app and 'Яндекс Карты' in app
+          assert 'mapLinksHTML(p)' in app
+          assert '.maplinks{' in csss
+          assert 'place-nav.js?build=1' in idx
+          assert 'app-style.css?build=2233' in idx and 'place-app.js?build=5' in idx
+          print('Navigation links QA OK')
+          PY
+      - name: Commit and remove workflow
+        run: |
+          rm .github/workflows/add-map-links.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add place-app.js app-style.css index.html place-nav.js .github/workflows/add-map-links.yml
+          git commit -m 'Add verified map links to place cards'
+          git push
