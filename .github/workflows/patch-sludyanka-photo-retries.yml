@@ -1,0 +1,57 @@
+name: Patch Slyudyanka photo retries
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-sludyanka-photo-retries.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch retry handling
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/finish-sludyanka-cards.yml')
+          s=p.read_text(encoding='utf-8')
+          old="          import json,re,html\n\n          def j(obj): return json.dumps(obj,ensure_ascii=False,separators=(',',':'))"
+          new="""          import json,re,html,time
+          from urllib.error import HTTPError
+
+          def open_retry(req,timeout):
+              last=None
+              for delay in (0,8,16,32):
+                  if delay: time.sleep(delay)
+                  try:
+                      return urlopen(req,timeout=timeout)
+                  except HTTPError as e:
+                      last=e
+                      if e.code!=429: raise
+              raise last
+
+          def j(obj): return json.dumps(obj,ensure_ascii=False,separators=(',',':'))"""
+          if old not in s: raise RuntimeError('import anchor not found')
+          s=s.replace(old,new,1)
+          a="with urlopen(req,timeout=60) as r: payload=json.load(r)"
+          b="with open_retry(req,60) as r: payload=json.load(r)"
+          c="with urlopen(preq,timeout=90) as r: raw=r.read()"
+          d="with open_retry(preq,90) as r: raw=r.read()"
+          if a not in s or c not in s: raise RuntimeError('urlopen anchors not found')
+          s=s.replace(a,b).replace(c,d)
+          # Gentle spacing between Commons files prevents hammering the API.
+          anchor="              print(key,outname,out.stat().st_size,im.size,artist,lic)"
+          if anchor not in s: raise RuntimeError('photo-loop anchor not found')
+          s=s.replace(anchor,anchor+"\n              time.sleep(4)",1)
+          p.write_text(s,encoding='utf-8')
+          print('Retry/backoff patch applied')
+          PY
+      - name: Commit patch and self-clean
+        run: |
+          rm .github/workflows/patch-sludyanka-photo-retries.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/finish-sludyanka-cards.yml .github/workflows/patch-sludyanka-photo-retries.yml
+          git commit -m 'Harden Slyudyanka photo download retries'
+          git push
