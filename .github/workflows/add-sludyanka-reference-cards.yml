@@ -1,0 +1,94 @@
+name: Add Slyudyanka reference cards
+on:
+  push:
+    paths:
+      - '.github/workflows/add-sludyanka-reference-cards.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet pillow
+      - name: Add verified cards and Shaman Cape photo
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from urllib.parse import urlencode
+          from io import BytesIO
+          from PIL import Image, ImageOps
+          import json, re, html
+
+          # Download a verified Wikimedia preview for Shaman Cape.
+          filename='Shaman Cape on Lake Baikal.jpg'
+          params=urlencode({'action':'query','format':'json','prop':'imageinfo','iiprop':'url|extmetadata','iiurlwidth':'900','titles':'File:'+filename,'formatversion':'2'})
+          req=Request('https://commons.wikimedia.org/w/api.php?'+params,headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+          with urlopen(req,timeout=60) as r: payload=json.load(r)
+          info=payload['query']['pages'][0]['imageinfo'][0]
+          meta=info.get('extmetadata',{})
+          lic=html.unescape(re.sub('<[^>]+>','',meta.get('LicenseShortName',{}).get('value',''))).strip()
+          artist=html.unescape(re.sub('<[^>]+>','',meta.get('Artist',{}).get('value',''))).strip()
+          if 'CC BY-SA 4.0' not in lic and 'Attribution-ShareAlike 4.0' not in lic:
+              raise RuntimeError('Unexpected license: '+lic)
+          preq=Request(info.get('thumburl') or info['url'],headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+          with urlopen(preq,timeout=90) as r: raw=r.read()
+          im=Image.open(BytesIO(raw)); im=ImageOps.exif_transpose(im).convert('RGB'); im.thumbnail((900,900),Image.Resampling.LANCZOS)
+          out=Path('assets/place-photos/slud-3-1.jpg'); out.parent.mkdir(parents=True,exist_ok=True)
+          im.save(out,'JPEG',quality=82,optimize=True,progressive=True)
+          if out.stat().st_size==0 or out.stat().st_size>400*1024: raise RuntimeError('Bad output size')
+          original=info['url'].split('?')[0]
+
+          cards={
+          'slud-1':"""window.PLACE_DETAILS['slud-1']={intro:'Беломраморный вокзал станции Слюдянка I — редкий действующий железнодорожный памятник начала XX века и одна из самых характерных архитектурных точек Южного Байкала.',short:'Действующий исторический вокзал из местного белого и розового мрамора.',why:'Вокзал интересен не только как красивое здание: он напрямую связан со строительством Кругобайкальской железной дороги. Мрамор добывали здесь же, в Слюдянке, поэтому архитектура буквально сделана из местной геологии.',facts:['🏛 Вокзал построен в начале XX века для станции Слюдянка','🪨 Основной материал — местный белый и розовый нешлифованный мрамор','🚂 Здание остаётся действующим пассажирским вокзалом','📍 Точная геолокация подтверждена картографически: 51.658786, 103.724168'],time:'Около 30–45 минут на внешний осмотр, зал ожидания и фотографии.',walk:'Пешая часть минимальная — прогулка по привокзальной площади и общедоступным зонам вокзала.',access:'Подъезжаем по обычным городским улицам Слюдянки к станции Слюдянка I. Адрес по 2ГИС: ул. Героя Ивана Тонконога, 18.',parking:'Рядом с вокзалом есть городская и привокзальная автомобильная инфраструктура, но конкретное свободное место заранее не гарантируем.',best:'Можно приезжать в любое светлое время. Для фотографий фасада приятнее мягкий утренний или вечерний свет.',photo:['Мраморный фасад вокзала','Архитектурные детали белого и розового мрамора','Привокзальная площадь','Сравнение современного вида с архивной фотографией начала XX века'],nearby:['slud-4','slud-18','slud-2'],amenities:'Это действующий вокзал: зал ожидания, кассы и городская инфраструктура находятся рядом.',fit:'✅ Да. Короткая, доступная и содержательная историческая остановка без походной части.',important:'Это действующий железнодорожный объект. Не выходим в служебные зоны и на пути вне разрешённых пассажирских участков.',check:'Статус действующего мраморного вокзала подтверждён муниципальными материалами Слюдянки, Центральным музеем железнодорожного транспорта и актуальной геолокацией 2ГИС. Галерея использует проверенные Wikimedia-фотографии с сохранёнными авторами и лицензиями.'};""",
+          'slud-2':"""window.PLACE_DETAILS['slud-2']={intro:'Частный музей-усадьба «Самоцветы Байкала» с большой коллекцией минералов Слюдянского района и других регионов России.',short:'Частная минералогическая коллекция в городе, выросшем вокруг добычи слюды и мрамора.',why:'Для Слюдянки это одна из самых содержательных локальных точек: после мраморного вокзала можно увидеть сами минералы и горные породы, благодаря которым район стал известен геологам.',facts:['💎 Муниципальный сайт описывает коллекцию примерно из 8960 экспонатов','🪨 В музее отдельно представлены минералы Южного Прибайкалья','📍 Адрес подтверждён двумя актуальными источниками: Слюдяная ул., 36','☎️ Телефон муниципального справочника: +7 (39544) 5-34-40'],time:'Около 45–60 минут, если музей открыт и доступна экскурсия.',walk:'Пешая часть минимальная; обычное городское посещение.',access:'Музей находится в Слюдянке по адресу Слюдяная улица, 36. Подъезд по городским улицам.',parking:'Отдельную официальную парковку музея не подтверждаем; используем разрешённое место на городской улице.',best:'Планировать на дневное время и обязательно позвонить перед выездом.',photo:['Минералы Слюдянского района','Общий вид коллекции — если съёмка разрешена','Крупные планы необычных образцов — с разрешения музея'],nearby:['slud-1','slud-4','slud-5'],amenities:'При музее муниципальный сайт указывает торговую лавку с изделиями и консультациями по минералам.',fit:'✅ Да, если заранее подтвердить, что музей принимает посетителей в нужное время.',important:'По режиму работы есть расхождение между официальной муниципальной страницей, картографическими сервисами и свежими отзывами. Не строим день вокруг опубликованных часов без звонка. Правила фотосъёмки также уточняем на месте.',check:'Существование, адрес, профиль коллекции и телефон подтверждены муниципальным сайтом Слюдянки и 2ГИС. Из-за расхождений по фактическому графику точные часы сознательно не фиксируем — перед поездкой звоним.'};""",
+          'slud-3':"""window.PLACE_DETAILS['slud-3']={intro:'Шаманский мыс — скальный отрог между Слюдянкой и Култуком, который выступает в Култукский залив и считается одним из символов Южного Байкала.',short:'Скальный мыс, Байкал с двух сторон и сакральная история — без длинного похода.',why:'Здесь хорошо сочетаются природный и культурный смысл: мыс — официальный памятник природы, а для местной традиции это сакральное место Айха-Шулун. С оконечности открываются широкие виды на Култукский залив и Хамар-Дабан.',facts:['🌊 Официальный памятник природы регионального значения','🟣 Имеет сакральное значение; традиционное название — Айха-Шулун, «Страшный камень»','📍 Геометка проверенной Wikimedia-фотографии: 51.694722, 103.705672','🚉 Рядом есть железнодорожная остановка «Пляж Шаманка»'],time:'Около 45–75 минут на прогулку по мысу и фотографии.',walk:'Короткая прогулка с небольшими подъёмами. На отдельных местах тропа узкая; после дождя глина может быть скользкой.',access:'С автомобильной стороны к пляжу ведёт узкая неровная грунтовая дорога вдоль железной дороги. Свежие отзывы подтверждают проезд обычных машин, но качество дороги оценивают как плохое. Для нас разумнее ехать медленно и закончить автомобильную часть на разрешённой площадке у пляжа, не пытаться заезжать на сам мыс.',parking:'У пляжа автомобили фактически оставляют перед пешим выходом на мыс, но официальную размеченную парковку подтвердить не удалось. На месте выбираем только разрешённую площадку, не перекрывая дорогу и железнодорожную инфраструктуру.',best:'Лучше в сухую погоду и без спешки. После дождя узкие глинистые участки становятся неприятнее; погода на Байкале может быстро меняться.',photo:['Мыс с пляжа','Байкал по обе стороны скального гребня','Панорама Култукского залива','Скалы и тропа — без постановочных действий на сакральном месте'],nearby:['slud-10','slud-11','slud-1'],amenities:'Это природная точка, а не благоустроенный городской парк. Базовую инфраструктуру лучше использовать в Слюдянке или Култуке.',fit:'✅ Да в сухую погоду. Пешая часть короткая, но автомобильный подъезд по последнему грунтовому участку требует аккуратности.',important:'Мыс имеет статус памятника природы и сакральное значение. Не разводим костры, не оставляем мусор, не повреждаем скалы и растительность и не привязываем ленты без понимания местной традиции.',check:'Статус и сакральное значение подтверждены Дирекцией ООПТ Иркутской области. Точная геолокация подтверждена Wikimedia-фотографией с GPS. Состояние подъезда дополнительно сверено по свежим отзывам автомобилистов; официальную парковку подтвердить не удалось.'};"""
+          }
+
+          # Replace/append the three detailed cards.
+          dp=Path('details.js'); text=dp.read_text(encoding='utf-8')
+          for key,block in cards.items():
+              text=re.sub(r"window\.PLACE_DETAILS\['"+re.escape(key)+r"'\]=\{.*?\};\s*",'',text,flags=re.S)
+              text=text.rstrip()+'\n'+block+'\n'
+          dp.write_text(text,encoding='utf-8')
+
+          # Add one verified image to Shaman Cape; do not alter the existing station gallery.
+          gp=Path('place-gallery.js'); g=gp.read_text(encoding='utf-8')
+          g=re.sub(r'Object\.assign\(window\.GALLERIES,\{"slud-3":\[.*?\]\}\);\s*','',g,flags=re.S)
+          gallery='Object.assign(window.GALLERIES,{"slud-3":[{"src":'+json.dumps(original,ensure_ascii=False)+',"thumb":"assets/place-photos/slud-3-1.jpg","caption":"Шаманский мыс · JukoFF · CC BY-SA 4.0","sourceUrl":"https://commons.wikimedia.org/wiki/File:Shaman_Cape_on_Lake_Baikal.jpg"}]});\n'
+          gp.write_text(g.rstrip()+'\n'+gallery,encoding='utf-8')
+
+          # Cache bust only the two changed JS resources.
+          ip=Path('index.html'); idx=ip.read_text(encoding='utf-8')
+          if 'place-gallery.js?build=8' not in idx or 'details.js?build=15' not in idx:
+              raise RuntimeError('Unexpected current build versions')
+          idx=idx.replace('place-gallery.js?build=8','place-gallery.js?build=9',1)
+          idx=idx.replace('details.js?build=15','details.js?build=16',1)
+          ip.write_text(idx,encoding='utf-8')
+
+          # Verify exactly the intended references.
+          final=dp.read_text(encoding='utf-8')
+          for key in cards:
+              marker="window.PLACE_DETAILS['"+key+"']="
+              if final.count(marker)!=1: raise RuntimeError('Bad detail count '+key)
+          gf=gp.read_text(encoding='utf-8')
+          if gf.count('"slud-3"')!=1: raise RuntimeError('Bad slud-3 gallery count')
+          if not Path('assets/place-photos/slud-3-1.jpg').exists(): raise RuntimeError('Photo missing')
+          print('PHOTO_ARTIST='+artist)
+          print('PHOTO_LICENSE='+lic)
+          print('PHOTO_SIZE='+str(out.stat().st_size))
+          print('PHOTO_DIMENSIONS='+str(im.size))
+          print('Verified Slyudyanka reference cards: slud-1, slud-2, slud-3')
+          PY
+      - name: Commit changes and remove one-off workflow
+        run: |
+          rm .github/workflows/add-sludyanka-reference-cards.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add details.js place-gallery.js index.html assets/place-photos/slud-3-1.jpg .github/workflows/add-sludyanka-reference-cards.yml
+          git commit -m 'Add verified Slyudyanka reference cards'
+          git push
