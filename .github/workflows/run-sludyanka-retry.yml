@@ -25,18 +25,7 @@ jobs:
           code=textwrap.dedent(m.group(1))
           code=code.replace('import json,re,html','import json,re,html,time\nfrom urllib.error import HTTPError')
           anchor="def j(obj): return json.dumps(obj,ensure_ascii=False,separators=(',',':'))"
-          retry="""def open_retry(req,timeout):
-    last=None
-    for delay in (0,8,16,32,48):
-        if delay: time.sleep(delay)
-        try:
-            return urlopen(req,timeout=timeout)
-        except HTTPError as e:
-            last=e
-            if e.code != 429: raise
-    raise last
-
-"""
+          retry="def open_retry(req,timeout):\n    last=None\n    for delay in (0,8,16,32,48):\n        if delay: time.sleep(delay)\n        try:\n            return urlopen(req,timeout=timeout)\n        except HTTPError as e:\n            last=e\n            if e.code != 429: raise\n    raise last\n\n"
           if anchor not in code: raise RuntimeError('Function anchor not found')
           code=code.replace(anchor,retry+anchor,1)
           code=code.replace('urlopen(req,timeout=60)','open_retry(req,60)')
