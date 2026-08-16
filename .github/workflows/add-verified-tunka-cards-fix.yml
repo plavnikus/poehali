@@ -1,0 +1,79 @@
+name: Retry verified Tunka cards
+on:
+  push:
+    paths:
+      - '.github/workflows/add-verified-tunka-cards-fix.yml'
+permissions:
+  contents: write
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --quiet pillow
+      - name: Add verified cards and photo
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from urllib.parse import urlencode, quote
+          from io import BytesIO
+          from PIL import Image, ImageOps
+          import json, re, html
+
+          dp=Path('details.js'); text=dp.read_text(encoding='utf-8')
+          cards={
+          'arshan-13': """window.PLACE_DETAILS['arshan-13']={intro:'Действующий буддийский дацан «Тушита» в Кырене — короткая культурная остановка в районном центре Тункинской долины.',short:'Дацан «Тушита» — действующий буддийский храм в Кырене.',why:'Кыренский дацан интересен как живая религиозная точка, а не музейная декорация. Современная община считается продолжателем исторического Кыренского дацана, существовавшего в Тункинской долине с начала XIX века.',facts:['🛕 Действующая зарегистрированная буддийская религиозная организация','📍 Подтверждённый юридический адрес: Кырен, ул. Жукова, 15','🕰 Исторический Кыренский дацан возник в начале XIX века; современное возрождение началось в 1990-х','🙏 В дацане проходят хуралы и буддийские обряды'],time:'Около 30–45 минут на спокойное посещение.',walk:'Практически без пешей части; короткий подход от машины.',access:'Дацан находится в селе Кырен, районном центре на трассе Култук–Монды. Подъезд по обычным дорогам населённого пункта.',parking:'Отдельную официальную гостевую парковку у дацана подтвердить не удалось; парковаться нужно только там, где это разрешено и не мешает местным жителям.',best:'Лучше приезжать днём. Точное расписание хуралов и возможность посещения во время служб перед поездкой стоит уточнить.',photo:['Главный храм и территория','Буддийские архитектурные детали — там, где съёмка разрешена','Общий вид дацана в окружении Кырена'],nearby:['arshan-5','arshan-6'],amenities:'Кырен — районный центр: здесь есть магазины, кафе, аптеки и другая базовая инфраструктура.',fit:'✅ Да. Короткая культурная остановка без сложной дороги и пешей части.',important:'Это действующий религиозный объект. Ведём себя спокойно, не мешаем службам и уточняем правила фотосъёмки на месте.',check:'Существование действующего дацана и адрес подтверждены данными зарегистрированной религиозной организации и туристическими источниками. Актуальный режим посещения публично подтвердить не удалось — его проверяем перед поездкой.'};""",
+          'arshan-14': """window.PLACE_DETAILS['arshan-14']={intro:'Официальная оборудованная смотровая Тункинского национального парка с панорамой Койморских озёр, потухших вулканов и долины Иркута.',short:'Койморские озёра и вулканы Тункинской долины с одной оборудованной смотровой.',why:'Это одна из самых удобных панорамных точек направления: вместо попытки пробираться к болотистой системе озёр можно с короткой остановки увидеть сразу Койморские озёра, долину Иркута и древние вулканические формы.',facts:['👀 Официальная смотровая площадка национального парка','🪑 Есть скамейки и информационные стенды','🌋 Видны потухшие вулканы Тункинской котловины, включая Тальскую вершину','💧 Койморская система состоит из множества небольших озёр и болот, соединённых протоками'],time:'Около 20–40 минут на остановку, виды и фотографии.',walk:'Короткая прогулка непосредственно по оборудованной площадке.',access:'Едем только по разрешённой автомобильной дороге к официальной смотровой национального парка. К самим болотистым берегам Койморской системы на машине не съезжаем.',parking:'У площадки предусмотрена туристическая остановка, но точную схему парковочных мест перед поездкой лучше сверить по актуальной карте нацпарка.',best:'Лучше в ясную погоду утром или ближе к вечеру: дальние горы и вулканы читаются лучше, свет мягче.',photo:['Панорама Койморских озёр','Тальская вершина и другие вулканические формы','Широкий кадр долины Иркута и Восточных Саян'],nearby:['arshan-18','arshan-8'],amenities:'На самой площадке подтверждены скамейки и информационные стенды; кафе и туалеты здесь не фиксируем.',fit:'✅ Да. Очень короткая, безопасная и визуально сильная остановка без тяжёлой пешей части.',important:'Площадка находится в Тункинском национальном парке; требуется разрешение на посещение. Двигаться нужно только по разрешённым дорогам и маршрутам.',check:'Смотровая, её назначение и инфраструктура подтверждены официальным сайтом Тункинского национального парка. Перед поездкой проверяем актуальную доступность маршрутов и ограничения на карте парка.'};""",
+          'arshan-18': """window.PLACE_DETAILS['arshan-18']={intro:'Невысокий потухший вулкан Тальская вершина с хорошо читаемым кратером — редкий для наших поездок вулканический ландшафт без горного восхождения.',short:'Древний вулканический конус и кратер в Тункинской котловине.',why:'Тальская вершина даёт необычный для Прибайкалья сюжет: небольшой древний вулкан, сложенный шлаками и базальтами, с сохранившимся центральным кратером. При этом это не высокогорный поход.',facts:['🌋 Крупнейший из девяти вулканов Таловской группы','📏 Лавовый холм возвышается примерно на 68,5 м','⭕ Центральный кратер около 70–80 м в диаметре и до 6 м глубиной','🚗 Вулкан включён в официальный автомобильный маршрут нацпарка «Тунка заповедная»'],time:'Примерно 45–75 минут на короткий подход, подъём и осмотр кратера.',walk:'Лёгкая–умеренная прогулка примерно около 1 км в одну сторону по доступному рельефу; без горного треккинга.',access:'Подъезд к району вулкана предусмотрен официальным автомобильным маршрутом «Тунка заповедная». Последний короткий участок к вершине проходим пешком и не съезжаем автомобилем вне разрешённой дороги.',parking:'Точную оборудованную парковочную площадку у начала пешего участка подтвердить не удалось; машину оставляем только в разрешённой точке маршрута.',best:'Сухой ясный день. На открытом рельефе лучше видно форму кратера и панораму долины.',photo:['Кратер и вал Тальской вершины','Вулканический рельеф и базальтовые породы','Панорама Тункинской котловины с вулкана'],nearby:['arshan-14','arshan-19'],amenities:'Отдельную инфраструктуру непосредственно у вулкана не подтверждаем; воду и перекус лучше иметь с собой.',fit:'✅ Да. Очень необычная геологическая точка, при этом пешая часть укладывается в наш обычный формат.',important:'Это объект Тункинского национального парка. Для посещения нужно разрешение; перед поездкой проверяем открытые маршруты и действующие ограничения. Камни и геологические образцы не забираем.',check:'Сам объект, его параметры и включение в официальный автомобильный маршрут подтверждены Тункинским национальным парком и утверждённым паспортом маршрута. Пеший подход дополнительно сверён по независимому треку; фактическое состояние дороги проверяем перед выездом.'};"""
+          }
+          for key,block in cards.items():
+              marker="window.PLACE_DETAILS['"+key+"']="
+              if marker not in text:
+                  text=text.rstrip()+'\n'+block+'\n'
+          dp.write_text(text,encoding='utf-8')
+
+          data_path=Path('data6_arshan.js'); data=data_path.read_text(encoding='utf-8')
+          data=data.replace('"i":"arshan-13","d":"arshan","n":"Кыренский дацан","x":"Буддийская культурная точка районного центра, хорошо дополняющая Аршан и Ниловку.","c":["culture","photo"],"v":"partial","s":true,"p":"https://tunki.ru/","u":"https://tunki.ru/","t":"Вероятно","o":"Режим посещения уточнить перед поездкой."','"i":"arshan-13","d":"arshan","n":"Кыренский дацан «Тушита»","x":"Действующий буддийский дацан в Кырене — короткая культурная остановка без сложной пешей части.","c":["culture","photo"],"v":"verified","s":true,"p":"https://www.visitburyatia.ru/places/","u":"https://companies.rbc.ru/id/1020300004174-ro-mestnaya-religioznaya-organizatsiya-buddijskij-datsan-tushita-tunkinskogo-rajona-respubliki-buryatiya/","t":"Подтверждено","o":"Режим посещения и расписание хуралов проверяем перед поездкой."')
+          data=data.replace('"i":"arshan-14","d":"arshan","n":"Тункинская долина — панорамная остановка","x":"Луга, табуны и стена Восточного Саяна — чистая Instagram-остановка по дороге.","c":["photo","rest"],"v":"verified","s":false,"p":"https://tunki.ru/","u":"https://tunki.ru/","t":"Подтверждено","o":"Конкретную безопасную площадку выбираем по маршруту."','"i":"arshan-14","d":"arshan","n":"Смотровая «Койморские озёра»","x":"Официальная оборудованная смотровая с панорамой озёр, потухших вулканов и Тункинской долины.","c":["photo","rest"],"v":"verified","s":false,"p":"https://tunkapark.ru/objects/smotrovaya-ploshhadka-kojmorskie-ozera","u":"https://tunkapark.ru/objects/smotrovaya-ploshhadka-kojmorskie-ozera","t":"Подтверждено","o":"Требуется разрешение на посещение национального парка."')
+          data=data.replace('"i":"arshan-18","d":"arshan","n":"Потухший вулкан Тальская вершина / Талойский конус","x":"Вулканический рельеф Тункинской котловины — редкий тип ландшафта для региона.","c":["unusual","photo"],"v":"partial","s":false,"p":"https://tunki.ru/","u":"https://tunki.ru/","t":"Вероятно","o":"Нужна отдельная проверка точного подъезда и короткой пешки."','"i":"arshan-18","d":"arshan","n":"Потухший вулкан Тальская вершина","x":"Древний вулканический конус с сохранившимся кратером — необычная геологическая точка без тяжёлого восхождения.","c":["unusual","photo"],"v":"verified","s":false,"p":"https://tunkapark.ru/objects/potukhshij-vulkan-talskaya-vershina","u":"https://base.garant.ru/414000927/","t":"Подтверждено","o":"Официальный маршрут нацпарка; требуется разрешение."')
+          data_path.write_text(data,encoding='utf-8')
+
+          filename='Потухший вулкан Тальская вершина.jpg'
+          params=urlencode({'action':'query','format':'json','prop':'imageinfo','iiprop':'url|extmetadata','iiurlwidth':'900','titles':'File:'+filename,'formatversion':'2'})
+          req=Request('https://commons.wikimedia.org/w/api.php?'+params,headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+          with urlopen(req,timeout=60) as r: payload=json.load(r)
+          info=payload['query']['pages'][0]['imageinfo'][0]; meta=info.get('extmetadata',{})
+          lic=html.unescape(re.sub('<[^>]+>','',meta.get('LicenseShortName',{}).get('value',''))).strip(); artist=html.unescape(re.sub('<[^>]+>','',meta.get('Artist',{}).get('value',''))).strip()
+          if not lic.startswith('CC BY-SA'): raise RuntimeError('Unexpected license '+lic)
+          preq=Request(info.get('thumburl') or info['url'],headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+          with urlopen(preq,timeout=90) as r: raw=r.read()
+          im=Image.open(BytesIO(raw)); im=ImageOps.exif_transpose(im).convert('RGB'); im.thumbnail((900,900),Image.Resampling.LANCZOS)
+          out=Path('assets/place-photos/arshan-18-1.jpg'); out.parent.mkdir(parents=True,exist_ok=True); im.save(out,'JPEG',quality=82,optimize=True,progressive=True)
+          if out.stat().st_size>400*1024: raise RuntimeError('Photo too large')
+          gp=Path('place-gallery.js'); gallery=gp.read_text(encoding='utf-8')
+          if '"arshan-18":[' not in gallery:
+              item={'arshan-18':[{'src':info['url'],'thumb':out.as_posix(),'caption':f'Тальская вершина · {artist} · {lic}','sourceUrl':'https://commons.wikimedia.org/wiki/File:'+quote(filename.replace(' ','_'),safe='()_-')} ]}
+              gallery=gallery.rstrip()+'\nObject.assign(window.GALLERIES,'+json.dumps(item,ensure_ascii=False,separators=(',',':'))+');\n'; gp.write_text(gallery,encoding='utf-8')
+
+          ip=Path('index.html'); idx=ip.read_text(encoding='utf-8').replace('place-gallery.js?build=7','place-gallery.js?build=8',1).replace('details.js?build=12','details.js?build=13',1); ip.write_text(idx,encoding='utf-8')
+          final=dp.read_text(encoding='utf-8')
+          for key in cards:
+              marker="window.PLACE_DETAILS['"+key+"]="
+              if final.count(marker)!=1: raise RuntimeError('details failed '+key)
+          if not out.exists() or out.stat().st_size==0: raise RuntimeError('photo missing')
+          if 'place-gallery.js?build=8' not in idx or 'details.js?build=13' not in idx: raise RuntimeError('cache bump failed')
+          print('Verified cards:', ', '.join(cards)); print('Talskaya photo:', artist, lic, im.size, out.stat().st_size)
+          PY
+      - name: Remove one-off workflows
+        run: rm .github/workflows/add-verified-tunka-cards.yml .github/workflows/add-verified-tunka-cards-fix.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add details.js data6_arshan.js place-gallery.js index.html assets/place-photos/arshan-18-1.jpg .github/workflows/add-verified-tunka-cards.yml .github/workflows/add-verified-tunka-cards-fix.yml
+          git commit -m 'Add verified Tunka location cards'
+          git push
