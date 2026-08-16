@@ -1,0 +1,30 @@
+name: Fix Tunka final check
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-tunka-final-check.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix verification marker
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/add-verified-tunka-cards-final.yml')
+          s=p.read_text(encoding='utf-8')
+          old='marker="window.PLACE_DETAILS[\'"+key+"]="'
+          new='marker="window.PLACE_DETAILS[\'"+key+"\']="'
+          if old not in s:
+              raise RuntimeError('verification marker not found')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+          PY
+          rm .github/workflows/fix-tunka-final-check.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/add-verified-tunka-cards-final.yml .github/workflows/fix-tunka-final-check.yml
+          git commit -m 'Fix Tunka card verification marker'
+          git push
