@@ -1,0 +1,160 @@
+name: Add next verified Arshan cards
+
+on:
+  push:
+    paths:
+      - '.github/workflows/add-next-arshan-cards.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  add:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pillow
+        run: python -m pip install --quiet pillow
+      - name: Add verified cards and photos
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from urllib.parse import urlencode, quote
+          from urllib.error import HTTPError
+          from io import BytesIO
+          from PIL import Image, ImageOps
+          import json, re, time, html
+
+          details = Path('details.js')
+          text = details.read_text(encoding='utf-8')
+
+          cards = {
+          'arshan-2': """window.PLACE_DETAILS['arshan-2']={intro:'Пятиметровая синяя статуя Будды Медицины в лесной курортной зоне Аршана — короткая, очень фотогеничная и культурно интересная остановка.',short:'Будда Медицины, молитвенные барабаны и короткая прогулка по курортной зоне.',why:'Статуя Будды Медицины — один из самых выразительных современных буддийских объектов Аршана. Она стоит среди деревьев недалеко от санатория и хорошо объединяется с Сагаан Убгэном и прогулкой по парку.',facts:['🟦 Статуя посвящена Будде Медицины — Будде врачевания','📍 Координаты по геометке Wikimedia Commons: 51.915252, 102.428859','🚶 Курорт «Аршан» указывает расстояние около 500 м от санатория','🟣 При обходе принято двигаться по часовой стрелке и вращать молитвенные барабаны'],time:'Около 20–40 минут вместе с неспешным осмотром и фотографиями.',walk:'Короткая лёгкая прогулка по курортной зоне, без заметного набора высоты.',access:'Заезжаем в Аршан и идём пешком в курортную зону. Статуя находится примерно в 500 м от санатория «Аршан» и рядом с другими прогулочными объектами парка.',parking:'Отдельную официальную парковку непосредственно у статуи не подтверждаем; машину оставляем на разрешённой парковке в Аршане и подходим пешком.',best:'Хорошо заходить утром или ближе к вечеру, когда меньше людей и мягче свет.',photo:['Статуя Будды Медицины целиком','Молитвенные барабаны','Синий Будда на фоне зелени и Саян'],nearby:['arshan-9','arshan-7','arshan-8'],amenities:'Кафе, магазины, туалеты и другая инфраструктура Аршана находятся неподалёку.',fit:'✅ Да. Короткая, визуально сильная и культурно интересная остановка без сложной пешей части.',important:'Это религиозный объект. Ведём себя спокойно, не мешаем молящимся и двигаемся вокруг святыни по часовой стрелке. Для посещения Аршана в границах Тункинского национального парка оформляется разрешение на населённый пункт.',check:'Место, расстояние от курорта, ритуал обхода и точные координаты подтверждены официальным сайтом курорта и геометкой лицензированной фотографии Wikimedia Commons.'};""",
+          'arshan-6': """window.PLACE_DETAILS['arshan-6']={intro:'Буддийский дацан у подножия священной горы Хайр-Хан рядом с Ниловой Пустынью — сильная культурная точка Тункинской долины.',short:'Дацан Бурхан Баабай, священная гора и панорама долины Ехэ-Угун.',why:'Бурхан Баабай — не просто отдельный храм, а целый сакральный ландшафт, связанный с почитанием Шаргай-Нойона. Здесь можно ограничиться коротким посещением дацана и смотровой, не проходя полный 4,6-километровый круг.',facts:['🛕 Дацан расположен у культового места Бурхан Баабай на горе Хайр-Хан','🌄 Рядом оборудована смотровая «Саянай зурхэн» с видом на долину реки Ехэ-Угун','🪵 К визит-центру «Хэшэгтэ» ведёт деревянный настил длиной около 400 м','🚶 Полная экотропа вокруг горы — 4,6 км и 2–3 часа; для нашего формата она необязательна'],time:'Около 45–75 минут на дацан, короткий подход и смотровую без полного кругового маршрута.',walk:'Лёгкая короткая прогулка по оборудованному участку. Полный круг 4,6 км в наш базовый план не включаем.',access:'Объект находится примерно в 3 км от Ниловой Пустыни. Национальный парк включает Бурхан Баабай в официальные автомобильные экскурсионные маршруты; подъезжаем только по разрешённой дороге и дальше идём по оборудованным участкам.',parking:'Точную официально обозначенную парковочную точку у дацана подтвердить не удалось; на месте используем только разрешённую площадку у входной инфраструктуры.',best:'Лучше закладывать спокойный дневной визит и не спешить: это сакральное место, а не просто фототочка.',photo:['Дацан у подножия Хайр-Хана','Сакральные сооружения Бурхан Баабай','Панорама долины Ехэ-Угун со смотровой'],nearby:['arshan-5','arshan-13'],amenities:'Рядом работает визит-центр «Хэшэгтэ»; национальный парк также указывает придорожную столовую рядом с культовым местом.',fit:'✅ Да, если ограничиться дацаном и короткой прогулкой. Полный круг «Саянай зурхэн» уже превышает наш обычный лимит по времени.',important:'Для посещения объекта требуется разрешение Тункинского национального парка. Движемся только по разрешённым маршрутам и соблюдаем правила сакрального места.',check:'Существование дацана, расположение рядом с Ниловкой, смотровая, настил и параметры полной экотропы подтверждены официальными материалами Тункинского национального парка.'};""",
+          'arshan-7': """window.PLACE_DETAILS['arshan-7']={intro:'Самый узнаваемый питьевой источник курорта Аршан — «Бронзовый мальчик», или Хубун, на небольшом холме рядом с санаторием.',short:'Минеральный источник Хубун — короткая курортная остановка рядом с парком.',why:'Источник хорошо показывает, откуда вообще вырос курорт Аршан: минеральная вода здесь не декорация, а основа истории места. Это короткая остановка, которую удобно соединить с Буддой Медицины и парком.',facts:['💧 Официальное название на сайте курорта — минеральный источник «Бронзовый мальчик»','🧒 Местное название — Хубун / «хубуунчик»','📍 Источник находится неподалёку от санатория «Аршан», на холме','📸 На Wikimedia Commons есть документальная фотография источника 2011 года'],time:'Около 15–30 минут.',walk:'Короткий пеший подход по курортной зоне; специальной подготовки не требуется.',access:'Заезжаем в Аршан и подходим к источнику пешком от курортной части. Курорт «Аршан» указывает его примерно в 1,1 км в прогулочной сетке достопримечательностей.',parking:'Отдельную официальную парковку у самого источника не подтверждаем; автомобиль лучше оставить на разрешённой парковке в посёлке.',best:'Удобно совместить с прогулкой по парку, Буддой Медицины и Сагаан Убгэном.',photo:['Сам источник Хубун','Курортная дорожка и окружение','Детали источника без постановочных кадров'],nearby:['arshan-2','arshan-8','arshan-9'],amenities:'Вся курортная инфраструктура Аршана — кафе, магазины и туалеты — рядом.',fit:'✅ Да. Очень короткая остановка, которая добавляет к прогулке локальную историю и атмосферу курорта.',important:'Не воспринимаем минеральную воду как универсальное лечение. Если есть медицинские ограничения, ориентируемся на рекомендации врача. Для посещения Аршана в границах нацпарка оформляется разрешение на населённый пункт.',check:'Источник и его расположение подтверждены официальными сайтами курорта «Аршан» и Тункинского национального парка; фотография и авторство проверены по Wikimedia Commons.'};""",
+          'arshan-8': """window.PLACE_DETAILS['arshan-8']={intro:'Старая парковая зона курорта Аршан с дорожками, хвойными деревьями и видами на Восточные Саяны — место для спокойной передышки между точками.',short:'Курортный парк, старые деревья и спокойная прогулка без цели куда-то карабкаться.',why:'Парк хорош не как отдельная «достопримечательность на пять звёзд», а как связующая часть Аршана: здесь приятно замедлиться между источником, Буддой Медицины и Сагаан Убгэном и просто посидеть в тени.',facts:['🌲 Курортная парковая зона официально включена в перечень достопримечательностей санатория','🚶 Внутри — короткие прогулочные дорожки без горного треккинга','📸 Сохранилась лицензированная фотография парковой зоны 2008 года','⛰ В просветах между деревьями видны Восточные Саяны'],time:'От 30 минут до часа в зависимости от темпа и остановок.',walk:'Лёгкая прогулка по парковой зоне.',access:'Парк находится в курортной части Аршана и логично проходится пешком вместе с источником, Буддой Медицины и Сагаан Убгэном.',parking:'Пользуемся разрешёнными парковками Аршана; отдельную парковочную точку именно для парка не фиксируем.',best:'Особенно приятно утром или во второй половине дня, когда меньше людей и не так жарко.',photo:['Аллеи и старые деревья','Горы через просветы в парке','Спокойные места для отдыха'],nearby:['arshan-2','arshan-7','arshan-9'],amenities:'Кафе, магазины, санаторная инфраструктура и туалеты находятся в курортной части посёлка.',fit:'✅ Да. Это простой и спокойный семейный блок без нагрузки, особенно полезный между более насыщенными точками.',important:'Парк находится в границах Тункинского национального парка; для посещения Аршана оформляется разрешение на населённый пункт. Не уходим с разрешённых дорожек в закрытые природные зоны.',check:'Парковая зона подтверждена официальным сайтом курорта; фотография, дата, автор и лицензия проверены по Wikimedia Commons.'};"""
+          }
+
+          for key, block in cards.items():
+              marker = f"window.PLACE_DETAILS['{key}']="
+              if marker not in text:
+                  text = text.rstrip() + '\n' + block + '\n'
+          details.write_text(text, encoding='utf-8')
+
+          # Make arshan-7 a precise, verified object instead of a generic group of sources.
+          data_path = Path('data6_arshan.js')
+          data = data_path.read_text(encoding='utf-8')
+          data = data.replace('"i":"arshan-7","d":"arshan","n":"Минеральные источники Аршана","x":"Галерея источников и классическая курортная прогулка у подножия Саян.","c":["rest","culture"],"v":"verified","s":false,"p":"https://baikalgo.ru/where/poselok-arshan/","u":"https://baikalgo.ru/where/poselok-arshan/","t":"Подтверждено","o":"В высокий сезон лучше приезжать рано."', '"i":"arshan-7","d":"arshan","n":"Минеральный источник «Бронзовый мальчик»","x":"Хубун — самый узнаваемый минеральный источник курорта Аршан и короткая остановка рядом с парком.","c":["rest","culture"],"v":"verified","s":false,"p":"https://kurort-arshan.ru/about/dostoprimechatelnosti/mineralnyy-istochnik-bronzovyy-malchik/","u":"https://tunkapark.ru/objects/mineralnyj-istochnik-arshan","t":"Подтверждено","o":"Короткая прогулка; для Аршана оформляем разрешение на населённый пункт."')
+          data_path.write_text(data, encoding='utf-8')
+
+          targets = {
+            'arshan-6': ['Burkhan Babay 01.jpg','Burkhan Babay 02.jpg','Burkhan Babay 03.jpg'],
+            'arshan-7': ['Hubun (2).jpg'],
+            'arshan-8': ['Arshan park area.jpg'],
+          }
+          labels = {
+            'Burkhan Babay 01.jpg':'Бурхан Баабай',
+            'Burkhan Babay 02.jpg':'Бурхан Баабай',
+            'Burkhan Babay 03.jpg':'Бурхан Баабай',
+            'Hubun (2).jpg':'Минеральный источник Хубун',
+            'Arshan park area.jpg':'Курортный парк Аршана',
+          }
+
+          def get_json(url):
+              delays=(0,5,10,20,40)
+              for attempt,d in enumerate(delays,1):
+                  if d: time.sleep(d)
+                  req=Request(url,headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+                  try:
+                      with urlopen(req,timeout=60) as r: return json.load(r)
+                  except HTTPError as e:
+                      if e.code!=429 or attempt==len(delays): raise
+              raise RuntimeError('API failed')
+
+          def get_bytes(url):
+              delays=(0,5,10,20,40)
+              for attempt,d in enumerate(delays,1):
+                  if d: time.sleep(d)
+                  req=Request(url,headers={'User-Agent':'Poehali-photo-verifier/1.0 (github.com/plavnikus/poehali)'})
+                  try:
+                      with urlopen(req,timeout=90) as r: return r.read()
+                  except HTTPError as e:
+                      if e.code!=429 or attempt==len(delays): raise
+              raise RuntimeError('download failed')
+
+          out=Path('assets/place-photos'); out.mkdir(parents=True,exist_ok=True)
+          gallery_add={}
+          counter=0
+          for place, files in targets.items():
+              items=[]
+              for idx, filename in enumerate(files,1):
+                  params=urlencode({'action':'query','format':'json','prop':'imageinfo','iiprop':'url|extmetadata','iiurlwidth':'900','titles':'File:'+filename,'formatversion':'2'})
+                  payload=get_json('https://commons.wikimedia.org/w/api.php?'+params)
+                  info=payload['query']['pages'][0]['imageinfo'][0]
+                  meta=info.get('extmetadata',{})
+                  lic=html.unescape(re.sub('<[^>]+>','',meta.get('LicenseShortName',{}).get('value',''))).strip()
+                  artist=html.unescape(re.sub('<[^>]+>','',meta.get('Artist',{}).get('value',''))).strip()
+                  if not (lic.startswith('CC BY') or lic.startswith('Public domain') or lic.startswith('CC0')):
+                      raise RuntimeError(f'Unapproved license {lic} for {filename}')
+                  preview=info.get('thumburl') or info['url']
+                  raw=get_bytes(preview)
+                  im=Image.open(BytesIO(raw)); im=ImageOps.exif_transpose(im).convert('RGB')
+                  im.thumbnail((900,900),Image.Resampling.LANCZOS)
+                  target=out/f'{place}-{idx}.jpg'
+                  im.save(target,'JPEG',quality=82,optimize=True,progressive=True)
+                  if target.stat().st_size>400*1024: raise RuntimeError(f'Photo too large {target}')
+                  caption=f"{labels[filename]} · {artist or 'Wikimedia Commons'} · {lic}"
+                  source='https://commons.wikimedia.org/wiki/File:'+quote(filename.replace(' ','_'),safe='()_-')
+                  items.append({'src':info['url'],'thumb':target.as_posix(),'caption':caption,'sourceUrl':source})
+                  print(place, filename, artist, lic, im.size, target.stat().st_size)
+                  counter+=1
+                  time.sleep(3)
+              gallery_add[place]=items
+
+          gallery_path=Path('place-gallery.js')
+          gallery=gallery_path.read_text(encoding='utf-8')
+          for place in gallery_add:
+              # Do not duplicate if a previous successful run already added it.
+              if f'"{place}":[' in gallery:
+                  gallery_add[place]=None
+          effective={k:v for k,v in gallery_add.items() if v}
+          if effective:
+              gallery = gallery.rstrip() + '\nObject.assign(window.GALLERIES,' + json.dumps(effective,ensure_ascii=False,separators=(',',':')) + ');\n'
+              gallery_path.write_text(gallery,encoding='utf-8')
+
+          index=Path('index.html')
+          idx=index.read_text(encoding='utf-8')
+          idx=idx.replace('place-gallery.js?build=6','place-gallery.js?build=7',1)
+          idx=idx.replace('details.js?build=11','details.js?build=12',1)
+          index.write_text(idx,encoding='utf-8')
+
+          # Verify exactly the intended scope.
+          final_details=details.read_text(encoding='utf-8')
+          for key in cards:
+              if final_details.count(f"window.PLACE_DETAILS['{key}']=") != 1:
+                  raise RuntimeError(f'Details verification failed for {key}')
+          final_gallery=gallery_path.read_text(encoding='utf-8')
+          for place, files in targets.items():
+              if f'"{place}":[' not in final_gallery:
+                  raise RuntimeError(f'Missing gallery for {place}')
+              for idx2 in range(1,len(files)+1):
+                  p=out/f'{place}-{idx2}.jpg'
+                  if not p.exists() or p.stat().st_size==0 or p.stat().st_size>400*1024:
+                      raise RuntimeError(f'Bad local photo {p}')
+          if 'place-gallery.js?build=7' not in index.read_text(encoding='utf-8') or 'details.js?build=12' not in index.read_text(encoding='utf-8'):
+              raise RuntimeError('Cache version verification failed')
+          print(f'Added/verified {len(cards)} cards and {counter} licensed photos')
+          PY
+      - name: Remove one-off workflow
+        run: rm .github/workflows/add-next-arshan-cards.yml
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add details.js data6_arshan.js place-gallery.js index.html assets/place-photos .github/workflows/add-next-arshan-cards.yml
+          git commit -m 'Add next verified Arshan location cards'
+          git push
