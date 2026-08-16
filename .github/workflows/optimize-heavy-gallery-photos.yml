@@ -18,7 +18,7 @@ jobs:
           python-version: '3.12'
       - name: Install Pillow
         run: python -m pip install --quiet pillow
-      - name: Inventory and optimize heavy gallery photos
+      - name: Optimize confirmed heavy gallery photos from Wikimedia previews
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -29,62 +29,35 @@ jobs:
           from PIL import Image, ImageOps
           import json, re, time, hashlib
 
-          GALLERY = Path('place-gallery.js')
-          text = GALLERY.read_text(encoding='utf-8')
+          # Confirmed by the previous inventory run: these unique originals are >400 KB.
+          heavy = [
+            'https://upload.wikimedia.org/wikipedia/commons/f/f8/Alexandrofski_central_prison_about_sixty_versts_from_Irkutsk_LCCN99615472.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/b/b9/Through_Siberia_(1883)._The_Alexandreffsky_Central_Prison,_near_Irkutsk.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/4/4e/Wierszyna,_ko%C5%9Bci%C3%B3%C5%82ek_katolicki_2013.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/c/c9/Ko%C5%9Bci%C3%B3%C5%82_we_wsi_Wierszyna.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/9/91/Wn%C4%99trze_chaty_w_skansenie_we_wsi_Wierszyna.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/6/69/Ko%C5%9Bci%C3%B3%C5%82_we_wsi_Wierszyna,_elewaja_frontowa.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/8/8b/%D0%9F%D0%B5%D1%80%D0%B2%D1%8B%D0%B9_%D0%B2%D0%BE%D0%B4%D0%BE%D0%BF%D0%B0%D0%B4_,_%D1%80._%D0%9A%D1%8B%D0%BD%D0%B3%D1%8B%D1%80%D0%B3%D0%B0.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/b/b1/%D0%9F%D0%B5%D1%80%D0%B2%D1%8B%D0%B9_%D0%B2%D0%BE%D0%B4%D0%BE%D0%BF%D0%B0%D0%B4.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/5/5f/%D0%9F%D0%B5%D1%80%D0%B2%D1%8B%D0%B9_%D0%B2%D0%BE%D0%B4%D0%BE%D0%BF%D0%B0%D0%B4,_%D1%80._%D0%9A%D1%8B%D0%BD%D0%B3%D1%8B%D1%80%D0%B3%D0%B0.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/d/d5/Buddha_of_Medicine_in_Arshan.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/b/ba/%D0%9D%D0%B8%D0%BB%D0%BE%D0%B2%D0%B0_%D0%9F%D1%83%D1%81%D1%82%D1%8B%D0%BD%D1%8C.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/a/a1/Slyudyanka,_from_Lake_Baikal.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/4/4c/%D0%91%D0%B0%D0%B9%D0%BA%D0%B0%D0%BB%D1%8C%D1%81%D0%BA,_%D0%B1%D0%B5%D1%80%D0%B5%D0%B3_%D0%91%D0%B0%D0%B9%D0%BA%D0%B0%D0%BB%D0%B0.jpg',
+            'https://upload.wikimedia.org/wikipedia/commons/6/65/%D0%9A%D0%BB%D1%83%D0%B1%D0%BD%D0%B8%D0%BA%D0%B0_-_%D0%BE%D0%B4%D0%B8%D0%BD_%D0%B8%D0%B7_%D1%81%D0%B8%D0%BC%D0%B2%D0%BE%D0%BB%D0%BE%D0%B2_%D0%91%D0%B0%D0%B9%D0%BA%D0%B0%D0%BB%D1%8C%D1%81%D0%BA%D0%B0.jpg',
+          ]
+
+          gallery_path = Path('place-gallery.js')
+          text = gallery_path.read_text(encoding='utf-8')
           record_re = re.compile(r'\{"src":"(?P<src>https://upload\.wikimedia\.org/wikipedia/commons/[^\"]+)"(?P<thumb>,"thumb":"(?P<thumburl>[^\"]+)")?,"caption":"')
           records = list(record_re.finditer(text))
-          if not records:
-              raise RuntimeError('No Wikimedia gallery records found')
+          existing = {m.group('src'): m.group('thumburl') for m in records if (m.group('thumburl') or '').startswith('assets/place-photos/')}
 
-          by_src = {}
-          for m in records:
-              by_src.setdefault(m.group('src'), []).append(m)
-
-          # Only sources that still have at least one record without a local optimized thumb need work.
-          candidates = []
-          for src, matches in by_src.items():
-              if any(not (m.group('thumburl') or '').startswith('assets/place-photos/') for m in matches):
-                  candidates.append(src)
-
-          def api_size(src):
-              filename = unquote(src.rsplit('/', 1)[-1]).replace('_', ' ')
-              params = urlencode({
-                  'action': 'query', 'format': 'json', 'prop': 'imageinfo',
-                  'iiprop': 'size', 'titles': 'File:' + filename,
-                  'formatversion': '2'
-              })
-              url = 'https://commons.wikimedia.org/w/api.php?' + params
-              delays = (0, 5, 10, 20, 35)
+          def with_retries(url, purpose):
+              delays = (0, 10, 20, 40, 70)
               for attempt, delay in enumerate(delays, 1):
-                  if delay: time.sleep(delay)
-                  req = Request(url, headers={'User-Agent': 'Poehali-gallery-audit/1.0 (github.com/plavnikus/poehali)'})
-                  try:
-                      with urlopen(req, timeout=60) as r:
-                          payload = json.load(r)
-                      pages = payload.get('query', {}).get('pages', [])
-                      if not pages or 'imageinfo' not in pages[0]:
-                          raise RuntimeError(f'No imageinfo for {filename}')
-                      return int(pages[0]['imageinfo'][0]['size'])
-                  except HTTPError as e:
-                      if e.code != 429 or attempt == len(delays):
-                          raise
-              raise RuntimeError('API size lookup failed')
-
-          sizes = {}
-          for i, src in enumerate(candidates):
-              if i: time.sleep(1.5)
-              sizes[src] = api_size(src)
-
-          heavy = [src for src, size in sizes.items() if size > 400 * 1024]
-          print(f'Gallery Wikimedia sources needing audit: {len(candidates)}')
-          print(f'Heavy originals >400 KB: {len(heavy)}')
-          for src in heavy:
-              print(f'HEAVY {sizes[src]/1024:.1f} KB {src}')
-
-          def fetch_bytes(url):
-              delays = (0, 8, 15, 25, 40)
-              for attempt, delay in enumerate(delays, 1):
-                  if delay: time.sleep(delay)
+                  if delay:
+                      time.sleep(delay)
                   req = Request(url, headers={'User-Agent': 'Poehali-photo-optimizer/1.0 (github.com/plavnikus/poehali)'})
                   try:
                       with urlopen(req, timeout=90) as r:
@@ -92,34 +65,49 @@ jobs:
                   except HTTPError as e:
                       if e.code != 429 or attempt == len(delays):
                           raise
-                      print(f'HTTP 429 downloading; retry {attempt}/{len(delays)}')
-              raise RuntimeError('Download failed')
+                      print(f'HTTP 429 during {purpose}; retry {attempt}/{len(delays)}')
+              raise RuntimeError(f'{purpose} failed')
+
+          def preview_url(src):
+              filename = unquote(src.rsplit('/', 1)[-1]).replace('_', ' ')
+              params = urlencode({
+                'action': 'query', 'format': 'json', 'prop': 'imageinfo',
+                'iiprop': 'url', 'iiurlwidth': '900', 'titles': 'File:' + filename,
+                'formatversion': '2'
+              })
+              payload = json.loads(with_retries('https://commons.wikimedia.org/w/api.php?' + params, 'preview lookup'))
+              pages = payload.get('query', {}).get('pages', [])
+              if not pages or 'imageinfo' not in pages[0]:
+                  raise RuntimeError(f'No imageinfo for {filename}')
+              info = pages[0]['imageinfo'][0]
+              return info.get('thumburl') or info.get('url')
 
           out_dir = Path('assets/place-photos')
           out_dir.mkdir(parents=True, exist_ok=True)
           src_to_local = {}
-          existing = {m.group('src'): m.group('thumburl') for m in records if (m.group('thumburl') or '').startswith('assets/place-photos/')}
 
-          # Reuse existing local file for the same source when available.
-          for src in heavy:
+          for index, src in enumerate(heavy):
               if src in existing:
                   src_to_local[src] = existing[src]
+                  print(f'REUSE {existing[src]}')
                   continue
-              digest = hashlib.sha1(src.encode('utf-8')).hexdigest()[:12]
-              target = out_dir / f'gallery-{digest}.jpg'
-              data = fetch_bytes(src)
+              if index:
+                  time.sleep(6)
+              purl = preview_url(src)
+              time.sleep(4)
+              data = with_retries(purl, 'preview download')
               im = Image.open(BytesIO(data))
               im = ImageOps.exif_transpose(im).convert('RGB')
-              im.thumbnail((900, 900), Image.Resampling.LANCZOS)
+              if im.width > 900 or im.height > 900:
+                  im.thumbnail((900, 900), Image.Resampling.LANCZOS)
+              target = out_dir / f'gallery-{hashlib.sha1(src.encode("utf-8")).hexdigest()[:12]}.jpg'
               im.save(target, 'JPEG', quality=82, optimize=True, progressive=True)
               kb = target.stat().st_size / 1024
               if kb > 400:
-                  raise RuntimeError(f'Optimized image still too large: {target} {kb:.1f} KB')
-              print(f'LOCAL {target}: {im.width}x{im.height}, {kb:.1f} KB')
+                  raise RuntimeError(f'Optimized preview too large: {target} {kb:.1f} KB')
               src_to_local[src] = target.as_posix()
-              time.sleep(3)
+              print(f'LOCAL {target}: {im.width}x{im.height}, {kb:.1f} KB')
 
-          # Update only thumb fields for heavy sources; preserve src/caption/sourceUrl exactly.
           def replace_record(m):
               src = m.group('src')
               if src not in src_to_local:
@@ -130,25 +118,20 @@ jobs:
               return '{"src":"' + src + '","thumb":"' + local + '","caption":"'
 
           new_text = record_re.sub(replace_record, text)
-          GALLERY.write_text(new_text, encoding='utf-8')
+          gallery_path.write_text(new_text, encoding='utf-8')
 
-          # Cache-bust only the gallery data file.
-          index = Path('index.html')
-          html = index.read_text(encoding='utf-8')
+          index_path = Path('index.html')
+          html = index_path.read_text(encoding='utf-8')
           m = re.search(r'place-gallery\.js\?build=(\d+)', html)
           if not m:
               raise RuntimeError('place-gallery build marker not found')
-          old = m.group(0)
-          new = f'place-gallery.js?build={int(m.group(1))+1}'
-          html = html.replace(old, new, 1)
-          index.write_text(html, encoding='utf-8')
+          html = html.replace(m.group(0), f'place-gallery.js?build={int(m.group(1))+1}', 1)
+          index_path.write_text(html, encoding='utf-8')
 
-          report = {
-              'audited_unique_sources': len(candidates),
+          Path('PHOTO_OPTIMIZATION_REPORT.json').write_text(json.dumps({
               'heavy_unique_sources': len(heavy),
-              'heavy': [{'src': s, 'original_kb': round(sizes[s]/1024,1), 'thumb': src_to_local[s]} for s in heavy]
-          }
-          Path('PHOTO_OPTIMIZATION_REPORT.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
+              'local_files': src_to_local
+          }, ensure_ascii=False, indent=2), encoding='utf-8')
           PY
       - name: Verify optimized gallery references
         run: |
@@ -157,15 +140,18 @@ jobs:
           import json
           report = json.loads(Path('PHOTO_OPTIMIZATION_REPORT.json').read_text(encoding='utf-8'))
           gallery = Path('place-gallery.js').read_text(encoding='utf-8')
-          for item in report['heavy']:
-              p = Path(item['thumb'])
+          for src, thumb in report['local_files'].items():
+              p = Path(thumb)
               if not p.exists():
                   raise RuntimeError(f'Missing local photo: {p}')
               if p.stat().st_size > 400 * 1024:
                   raise RuntimeError(f'Local photo too large: {p}')
-              if f'"thumb":"{item["thumb"]}"' not in gallery:
-                  raise RuntimeError(f'Gallery does not reference {item["thumb"]}')
-          print(json.dumps(report, ensure_ascii=False, indent=2))
+              # Every record using this heavy source must now use this local thumb.
+              count_src = gallery.count(f'"src":"{src}"')
+              count_thumb = gallery.count(f'"thumb":"{thumb}"')
+              if count_src != count_thumb:
+                  raise RuntimeError(f'Not all records optimized for {src}: src={count_src}, thumb={count_thumb}')
+          print(f"Verified {len(report['local_files'])} heavy unique sources")
           PY
       - name: Remove one-off workflow and report
         run: rm .github/workflows/optimize-heavy-gallery-photos.yml PHOTO_OPTIMIZATION_REPORT.json
@@ -174,9 +160,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add assets/place-photos place-gallery.js index.html .github/workflows/optimize-heavy-gallery-photos.yml
-          if git diff --cached --quiet; then
-            echo 'No heavy gallery photos required changes.'
-            exit 0
-          fi
           git commit -m 'Optimize remaining heavy gallery photos'
           git push
