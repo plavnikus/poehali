@@ -1,0 +1,22 @@
+name: Run human copy cleanup
+on:
+  push:
+    paths:
+      - '.github/workflows/run-humanize-copy.yml'
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply copy cleanup
+        run: python humanize_copy_tmp.py
+      - name: Commit and clean temporary files
+        run: |
+          rm humanize_copy_tmp.py .github/workflows/run-humanize-copy.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add details.js data5.js data6_arshan.js data6_sludyanka.js index.html humanize_copy_tmp.py .github/workflows/run-humanize-copy.yml
+          git commit -m 'Humanize Arshan and Slyudyanka card copy'
+          git push
