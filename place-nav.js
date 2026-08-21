@@ -4,7 +4,7 @@ window.PLACE_NAV={
   'tazh-3':{lat:52.925877,lon:106.759206,label:'Тажеранская обзорная площадка',source:'official route passport'},
   'tazh-4':{lat:52.951578,lon:106.749014,label:'Тажеранские скалы-останцы',source:'official route passport'},
   'tazh-5':{lat:52.719069,lon:106.533435,label:'Залив Бирхин',source:'official route passport'},
-  'ust-orda-14':{lat:52.790486,lon:104.745721,label:'Усть-Ордынский дацан «Тубдэн Даржелин»',source:'current map entity + verified cartography'},
+  'ust-orda-14':{lat:52.790486,lon:104.745721,label:'Усть-Ордынский дацан «Тубдэн Даржелин»',yandexUrl:'https://yandex.ru/maps/org/datsan_tubden_darzhalin/218424069516/',source:'verified Yandex map entity + official address'},
   'tazh-14':{lat:52.5275,lon:106.059722,label:'Устье реки Бугульдейки у Байкала',source:'independent hydrology references'},
   'tazh-23':{lat:53.050278,lon:105.522222,label:'Баяндаевский этнографический музей',source:'official address + independent geolocation'},
   'tazh-25':{lat:52.61075,lon:105.8,label:'Петроглифы у деревни Куртун',source:'official WGS84 protection zone'},
