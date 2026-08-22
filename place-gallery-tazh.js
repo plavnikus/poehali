@@ -19,6 +19,11 @@ Object.assign(window.GALLERIES||{}, {
   "tazh-26":[
     {"src":"https://b1.vpoxod.ru/ckeditor/36/0e/a4/398137.jpg","caption":"Старинные постройки Старой Бугульдейки · фото Евгений Витченко","sourceUrl":"https://www.vpoxod.ru/page/toponym/buguldeyka_info","rights":"family-reference"}
   ],
+  "tazh-27":[
+    {"src":"https://kezling.ru/wp-media/baikal_trip_buguldeyka_033.jpg","caption":"Развалины старого порта Бугульдейки · фото Владимир Кезлинг","sourceUrl":"https://kezling.ru/travels/baikal-trip/buguldeyka/","rights":"family-reference"},
+    {"src":"https://kezling.ru/wp-media/baikal_trip_buguldeyka_034.jpg","caption":"Старый порт и причал Бугульдейки · фото Владимир Кезлинг","sourceUrl":"https://kezling.ru/travels/baikal-trip/buguldeyka/","rights":"family-reference"},
+    {"src":"https://kezling.ru/wp-media/baikal_trip_buguldeyka_035.jpg","caption":"Следы портовой инфраструктуры Бугульдейки · фото Владимир Кезлинг","sourceUrl":"https://kezling.ru/travels/baikal-trip/buguldeyka/","rights":"family-reference"}
+  ],
   "tazh-31":[
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/1-5-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/1-5-scaled.jpg","caption":"Тургеневка, белорусский праздник Юр’я · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"},
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/3-3-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/3-3-scaled.jpg","caption":"Тургеневка и местные белорусские традиции · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"},
