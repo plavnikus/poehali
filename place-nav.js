@@ -9,6 +9,7 @@ window.PLACE_NAV={
   'tazh-23':{lat:53.050278,lon:105.522222,label:'Баяндаевский этнографический музей',source:'official address + independent geolocation'},
   'tazh-25':{lat:52.61075,lon:105.8,label:'Петроглифы у деревни Куртун',source:'official WGS84 protection zone'},
   'tazh-29':{lat:52.564845,lon:106.190511,label:'Урочище Голый Мыс',source:'official 2025 route passport'},
+  'tazh-32':{lat:53.150556,lon:105.331389,label:'Озеро Нухэ-Нур',source:'published lake coordinates + official district description'},
   'arshan-2':{lat:51.915617,lon:102.429026,label:'Будда Медицины',googleUrl:'https://maps.app.goo.gl/EFbSrY9WXRYZiWza6?g_st=ic',yandexUrl:'https://yandex.ru/maps/org/budda_meditsiny/152183331065/',source:'verified map entities + 2026 guide'},
   'arshan-9':{lat:51.91541,lon:102.42826,label:'Алтарь Сагаан Убгэн',yandexUrl:'https://yandex.ru/maps/org/sagaan_ubgen/7389356205/',source:'verified Yandex map entity'},
   'slud-1':{lat:51.658786,lon:103.724168,label:'Мраморный вокзал Слюдянки',yandexUrl:'https://yandex.ru/maps/org/railway_station/199004009873/',source:'verified Yandex railway-station entity'},
