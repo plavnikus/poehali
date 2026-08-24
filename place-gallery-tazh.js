@@ -24,10 +24,16 @@ Object.assign(window.GALLERIES||{}, {
     {"src":"https://kezling.ru/wp-media/baikal_trip_buguldeyka_034.jpg","caption":"Старый порт и причал Бугульдейки · фото Владимир Кезлинг","sourceUrl":"https://kezling.ru/travels/baikal-trip/buguldeyka/","rights":"family-reference"},
     {"src":"https://kezling.ru/wp-media/baikal_trip_buguldeyka_035.jpg","caption":"Следы портовой инфраструктуры Бугульдейки · фото Владимир Кезлинг","sourceUrl":"https://kezling.ru/travels/baikal-trip/buguldeyka/","rights":"family-reference"}
   ],
+  "tazh-28":[
+    {"src":"https://www.nature.baikal.ru/phs/norm/98/98801.jpg?1509090853=","caption":"Памятный крест экипажу самолёта у Бугульдейки · фото иван иванов 000 / Природа Байкала","sourceUrl":"https://www.nature.baikal.ru/phs/ph.shtml?id=98801","rights":"family-reference"}
+  ],
   "tazh-31":[
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/1-5-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/1-5-scaled.jpg","caption":"Тургеневка, белорусский праздник Юр’я · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"},
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/3-3-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/3-3-scaled.jpg","caption":"Тургеневка и местные белорусские традиции · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"},
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/6-2-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/6-2-scaled.jpg","caption":"Живая культурная среда Тургеневки · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"}
+  ],
+  "tazh-33":[
+    {"src":"https://aif-s3.aif.ru/images/009/854/470cb4c1eb9aaf873ed8d8568bd8c8b2.jpg","caption":"Белый изюбрь на границе Баяндаевского района · АиФ Иркутск","sourceUrl":"https://irk.aif.ru/society/bogatyy_kray_na_kom_derzhitsya_selskaya_zhizn_v_bayandaevskom_rayone","rights":"family-reference"}
   ],
   "tazh-34":[
     {"src":"https://sobory.ru/pic/58200/58239bb.jpg","caption":"Храм Архангела Михаила в Баяндае · Соборы.ру","sourceUrl":"https://sobory.ru/article/?object=58239","rights":"family-reference"}
