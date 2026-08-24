@@ -27,6 +27,9 @@ Object.assign(window.GALLERIES||{}, {
   "tazh-28":[
     {"src":"https://www.nature.baikal.ru/phs/norm/98/98801.jpg?1509090853=","caption":"Памятный крест экипажу самолёта у Бугульдейки · фото иван иванов 000 / Природа Байкала","sourceUrl":"https://www.nature.baikal.ru/phs/ph.shtml?id=98801","rights":"family-reference"}
   ],
+  "tazh-29":[
+    {"src":"https://img-fotki.yandex.ru/get/6107/19526786.18/0_715e6_c23b2233_orig.jpg","caption":"Утро у мыса Голый: торосы и открытый берег Байкала · фото Данил Коржонов","sourceUrl":"https://www.alfotoru.com/2012/04/12/%D1%82%D0%BE%D0%BD%D0%BA%D0%B8%D0%B5-%D1%81%D1%82%D1%80%D1%83%D0%BD%D1%8B-%D0%B1%D0%B0%D0%B9%D0%BA%D0%B0%D0%BB%D0%B0/","rights":"family-reference"}
+  ],
   "tazh-31":[
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/1-5-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/1-5-scaled.jpg","caption":"Тургеневка, белорусский праздник Юр’я · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"},
     {"src":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_1400/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/3-3-scaled.jpg","thumb":"https://res.cloudinary.com/doyndftsq/image/fetch/c_limit,w_900/http%3A//www.ogirk.ru/wp-content/uploads/post/2023/05/3-3-scaled.jpg","caption":"Тургеневка и местные белорусские традиции · фото Матрёна Бизикова / Областная","sourceUrl":"https://www.ogirk.ru/2023/05/31/umytsja-rosoj-i-pogadat/","rights":"family-reference"},
